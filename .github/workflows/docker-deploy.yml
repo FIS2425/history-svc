@@ -13,8 +13,8 @@ on:
       - labeled
 
 env:
-  REGISTRY_IMAGE: ${{ secrets.DOCKER_USERNAME }}/AQUÍ_VA_EL_NOMBRE_DE_TU_IMAGEN_SIN_MAYUSCULAS
-  GHCR_IMAGE: fis2425/AQUÍ_VA_EL_NOMBRE_DE_TU_IMAGEN_SIN_MAYUSCULAS
+  REGISTRY_IMAGE: ${{ secrets.DOCKER_USERNAME }}/history-svc
+  GHCR_IMAGE: fis2425/history-svc
   PR_ID: ${{ github.event.pull_request.number }}
   TAG: ${{ github.ref_name }}
 
@@ -28,7 +28,7 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-    
+
     steps:
       - name: Checkout ⬇️
         uses: actions/checkout@v4.2.2
