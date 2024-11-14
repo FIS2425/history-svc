@@ -4,7 +4,7 @@ info:
   description: API to manage patient clinical histories.
   version: 1.0.1
 servers:
-  - url: http://localhost:3005
+  - url: http://localhost:3005/api/v1
     description: Local development server
 paths:
   /histories:

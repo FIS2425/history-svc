@@ -8,6 +8,7 @@ import clinicalHistoryRoutes from './routes/clinicalHistoryRoutes.js';
 
 
 const swaggerDocument = YAML.load('./openapi.yaml');
+const prefix = process.env.API_PREFIX || '';
 
 export default function () {
   const app = express();
@@ -22,7 +23,7 @@ export default function () {
     res.send('API funcionando correctamente');
   });
 
-  app.use('/histories', clinicalHistoryRoutes);
+  app.use(prefix + '/histories', clinicalHistoryRoutes);
   app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
   return app;
