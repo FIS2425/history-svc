@@ -1,4 +1,5 @@
 import { Schema } from 'mongoose';
+import validator from 'validator';
 
 const fileSchema = new Schema({
   name: {
@@ -7,7 +8,11 @@ const fileSchema = new Schema({
   },
   url: {
     type: String,
-    required: true
+    required: true,
+    validate: {
+      validator: (value) => validator.isURL(value),
+      message: 'Invalid URL'
+    }
   },
   date: { 
     type: Date, 
