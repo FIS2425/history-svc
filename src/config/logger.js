@@ -29,7 +29,7 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  defaultMeta: { service: 'template-service' },
+  defaultMeta: { service: 'history-service' },
   transports: [
     new winston.transports.File({ filename: './logs/error.txt', level: 'error' }),
     new winston.transports.File({
@@ -47,6 +47,13 @@ const logger = winston.createLogger({
 if (process.env.NODE_ENV === 'development') {
   logger.add(new winston.transports.File({
     filename: './logs/developmentLog.txt', level: 'debug',
+  }));
+  logger.add(new winston.transports.Console({
+    level: 'debug',
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple(),
+    ),
   }));
 } else if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({

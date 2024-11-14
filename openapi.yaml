@@ -1,14 +1,131 @@
 openapi: 3.0.0
 info:
-  title: Microservicio Template
-  version: 1.0.0
-  description: Template para microservicios
-
+  title: Clinical History API
+  description: API to manage patient clinical histories.
+  version: 1.0.1
 servers:
-  - url: http://localhost:3001
-
+  - url: http://localhost:3005
+    description: Local development server
 paths:
-  # Aquí irán tus rutas
-
+  /histories:
+    get:
+      summary: Get all clinical histories
+      responses:
+        '200':
+          description: Returns a list of all clinical histories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClinicalHistory'
+        '500':
+          description: Error retrieving clinical histories
+    post:
+      summary: Create a new clinical history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClinicalHistory'
+      responses:
+        '201':
+          description: Clinical history created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Patient ID is required or validation error
+        '500':
+          description: Error creating clinical history
+  /histories/{id}:
+    get:
+      summary: Get a clinical history by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the requested clinical history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '500':
+          description: Error retrieving clinical history
+    delete:
+      summary: Delete a clinical history by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Clinical history deleted successfully
+        '400':
+          description: Clinical history ID is required
+        '500':
+          description: Error deleting clinical history
+  /histories/patient/{patientId}:
+    get:
+      summary: Get a clinical history by patient ID
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the clinical history for the requested patient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '500':
+          description: Error retrieving clinical history for patient
+    delete:
+      summary: Delete a clinical history by patient ID
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Clinical history for the patient deleted successfully
+        '400':
+          description: Patient ID is required
+        '500':
+          description: Error deleting clinical history for patient
 components:
-  # Aquí irán tus componentes reutilizables
+  schemas:
+    ClinicalHistory:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateClinicalHistory:
+      type: object
+      properties:
+        patientId:
+          type: string
+      required:
+        - patientId
+
