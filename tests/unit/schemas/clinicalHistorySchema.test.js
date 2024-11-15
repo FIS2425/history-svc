@@ -92,4 +92,66 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
     const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
     await expect(clinicalHistory.validate()).rejects.toThrow();
   });
+
+  it('should throw validation error if startDate is after endDate', async () => {
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 1 day later
+    const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day before
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      treatments: [
+        { name: 'Invalid Treatment', startDate: futureDate, endDate: pastDate, instructions: 'Take once daily' }
+      ],
+      currentConditions: [],
+      images: [],
+      analitycs: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('End date must be today or in the future');
+  });
+
+  it('should throw validation error if startDate is before today', async () => {
+    const now = new Date();
+    const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day before
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      treatments: [
+        { name: 'Invalid Treatment', startDate: pastDate, endDate: now, instructions: 'Take once daily' }
+      ],
+      currentConditions: [],
+      images: [],
+      analitycs: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('Start date must be today or in the future');
+  });
+
+  it('should throw validation error if endDate is before today', async () => {
+    const now = new Date();
+    const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day before
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      treatments: [
+        { name: 'Invalid Treatment', startDate: now, endDate: pastDate, instructions: 'Take once daily' }
+      ],
+      currentConditions: [],
+      images: [],
+      analitycs: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('End date must be today or in the future');
+  });
+
 });
