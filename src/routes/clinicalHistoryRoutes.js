@@ -1,5 +1,6 @@
 import * as clinicalHistoryController from '../controllers/clinicalHistoryController.js';
 import * as treatmentController from '../controllers/treatmentController.js';
+import * as currentConditionController from '../controllers/currentConditionController.js';
 import express from 'express';
 const router = express.Router();
 
@@ -15,5 +16,10 @@ router.delete('/:id', clinicalHistoryController.deleteClinicalHistoryById);
 router.post('/:id/treatment', treatmentController.addTreatment);
 router.delete('/:id/treatment/:treatmentId', treatmentController.deleteTreatment);
 router.put('/:id/treatment/:treatmentId', treatmentController.updateTreatment);
+
+// Current condition routes
+router.post('/:id/condition', currentConditionController.addCurrentCondition);
+router.delete('/:id/condition/:currentConditionId', currentConditionController.deleteCurrentCondition);
+router.put('/:id/condition/:currentConditionId', currentConditionController.updateCurrentCondition);
 
 export default router;
