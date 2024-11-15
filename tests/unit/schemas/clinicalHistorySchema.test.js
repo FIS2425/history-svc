@@ -154,4 +154,23 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
     await expect(clinicalHistory.validate()).rejects.toThrow('End date must be today or in the future');
   });
 
+  it('should throw validation error for currentCondition with date in the future', async () => {
+    const futureDate = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); // 1 day later
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      currentConditions: [
+        { name: 'Hypertension', details: 'High blood pressure', since: futureDate }
+      ],
+      treatments: [],
+      images: [],
+      analitycs: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('Since must be today or in the past');
+  });
+
 });

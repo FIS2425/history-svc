@@ -1,4 +1,3 @@
-import Treatment from '../models/Treatment.js';
 import ClinicalHistory from '../models/ClinicalHistory.js';
 import logger from '../config/logger.js';
 import mongoose from 'mongoose';
@@ -109,10 +108,10 @@ const updateTreatment = async (req, res) => {
       logger.error(`updateTreatment - Treatment with id ${treatmentId} was not found`);
       return res.status(404).json({ message: 'Treatment not found' });
     }
-    treatment.name = name;
-    treatment.startDate = startDate;
-    treatment.endDate = endDate;
-    treatment.instructions = instructions;
+    if (name) treatment.name = name;
+    if (startDate) treatment.startDate = startDate;
+    if (endDate) treatment.endDate = endDate;
+    if (instructions) treatment.instructions = instructions;
     await clinicalHistory.save();
     logger.info(`updateTreatment - Treatment with id ${treatmentId} updated in clinical history with id ${clinicalHistoryId}`);
     res.status(200).json(clinicalHistory);

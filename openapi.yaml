@@ -193,6 +193,93 @@ paths:
           description: Clinical history or treatment not found
         '500':
           description: Error updating treatment
+  /histories/{id}/condition:
+    post:
+      summary: Add a new current condition to a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrentCondition'
+      responses:
+        '200':
+          description: Current condition added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID is required or validation error
+        '404':
+          description: Clinical history not found
+        '500':
+          description: Error adding current condition
+  /histories/{id}/condition/{currentConditionId}:
+    delete:
+      summary: Delete a current condition from a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: currentConditionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current condition deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID or Current condition ID is required
+        '404':
+          description: Clinical history or current condition not found
+        '500':
+          description: Error deleting current condition
+    put:
+      summary: Update a current condition in a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: currentConditionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrentCondition'
+      responses:
+        '200':
+          description: Current condition updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID or Current condition ID is required, or validation error
+        '404':
+          description: Clinical history or current condition not found
+        '500':
+          description: Error updating current condition
 components:
   schemas:
     ClinicalHistory:
@@ -206,6 +293,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Treatment'
+        currentConditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrentCondition'
         createdAt:
           type: string
           format: date-time
@@ -240,3 +331,19 @@ components:
         - name
         - endDate
         - instructions
+    CurrentCondition:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the current condition
+        details:
+          type: string
+          description: Additional details about the current condition
+        since:
+          type: string
+          format: date
+          description: When the condition started
+      required:
+        - name
+        - details
