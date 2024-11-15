@@ -66,7 +66,6 @@ describe('CLINICAL HISTORY TREATMENT ENDPOINTS TEST', () => {
 
     it('should return 400 if treatment ID is not an ObjectID', async () => {
       const response = await request.delete(`/histories/${uuidv4()}/treatment/${uuidv4()}`);
-      console.log("XXX"+JSON.stringify(response.body));
       expect(response.status).toBe(400);
       expect(response.body.message).toBe('Treatment ID is not valid');
     });
