@@ -106,6 +106,93 @@ paths:
           description: Patient ID is required
         '500':
           description: Error deleting clinical history for patient
+  /histories/{id}/treatment:
+    post:
+      summary: Add a new treatment to a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Treatment'
+      responses:
+        '200':
+          description: Treatment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID is required or validation error
+        '404':
+          description: Clinical history not found
+        '500':
+          description: Error adding treatment
+  /histories/{id}/treatment/{treatmentId}:
+    delete:
+      summary: Delete a treatment from a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: treatmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Treatment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID or Treatment ID is required
+        '404':
+          description: Clinical history or treatment not found
+        '500':
+          description: Error deleting treatment
+    put:
+      summary: Update a treatment in a clinical history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: treatmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Treatment'
+      responses:
+        '200':
+          description: Treatment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID or Treatment ID is required, or validation error
+        '404':
+          description: Clinical history or treatment not found
+        '500':
+          description: Error updating treatment
 components:
   schemas:
     ClinicalHistory:
@@ -115,6 +202,10 @@ components:
           type: string
         patientId:
           type: string
+        treatments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Treatment'
         createdAt:
           type: string
           format: date-time
@@ -128,4 +219,24 @@ components:
           type: string
       required:
         - patientId
-
+    Treatment:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the treatment
+        startDate:
+          type: string
+          format: date
+          description: Start date of the treatment
+        endDate:
+          type: string
+          format: date
+          description: End date of the treatment
+        instructions:
+          type: string
+          description: Instructions for the treatment
+      required:
+        - name
+        - endDate
+        - instructions
