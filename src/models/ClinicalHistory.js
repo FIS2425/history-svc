@@ -16,6 +16,7 @@ const clinicalHistorySchema = new Schema({
   patientId: {
     type: String,
     required: true,
+    unique: true,
     validate: {
       validator: (value) => uuidValidate(value),
       message: 'Invalid patient UUID',
