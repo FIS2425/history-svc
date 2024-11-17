@@ -1,7 +1,9 @@
 import * as clinicalHistoryController from '../controllers/clinicalHistoryController.js';
 import * as treatmentController from '../controllers/treatmentController.js';
 import * as currentConditionController from '../controllers/currentConditionController.js';
+import * as fileController from '../controllers/fileController.js';
 import express from 'express';
+import uploadMiddleware from '../middleware/uploadMiddleware.js';
 const router = express.Router();
 
 // Clinical history routes
@@ -21,5 +23,9 @@ router.put('/:id/treatment/:treatmentId', treatmentController.updateTreatment);
 router.post('/:id/condition', currentConditionController.addCurrentCondition);
 router.delete('/:id/condition/:currentConditionId', currentConditionController.deleteCurrentCondition);
 router.put('/:id/condition/:currentConditionId', currentConditionController.updateCurrentCondition);
+
+// File routes
+router.post('/:id/image', uploadMiddleware, fileController.handleImageUpload);
+router.delete('/:id/image/:imageId', fileController.deleteImage);
 
 export default router;
