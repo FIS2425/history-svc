@@ -37,7 +37,7 @@ const clinicalHistorySchema = new Schema({
     required: true,
     default: [],
   },
-  analitycs: {
+  analytics: {
     type: [fileSchema],
     required: true,
     default: [],
