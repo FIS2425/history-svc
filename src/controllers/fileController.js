@@ -6,14 +6,18 @@ import mongoose from 'mongoose';
 
 const sasToken = process.env.AZURE_SAS_TOKEN;
 const accountName = process.env.AZURE_ACCOUNT_NAME;
-const imagesContainerName = process.env.AZURE_IMAGES_CONTAINER_NAME;
-
+const containerNames = {
+  image: process.env.AZURE_IMAGES_CONTAINER_NAME,
+  analytic: process.env.AZURE_ANALYTICS_CONTAINER_NAME
+};
 const blobServiceClient = new BlobServiceClient(`https://${accountName}.blob.core.windows.net/?${sasToken}`);
-const imagesContainerClient = blobServiceClient.getContainerClient(imagesContainerName);
+const containerClients = {
+  image: blobServiceClient.getContainerClient(containerNames.image),
+  analytic: blobServiceClient.getContainerClient(containerNames.analytic)
+};
 
-const uploadImageStream = async (fileName, filePath, mimeType) => {
-  const blobClient = imagesContainerClient.getBlockBlobClient(fileName);
-
+const uploadFileStream = async (fileName, filePath, mimeType, resourceType) => {
+  const blobClient = containerClients[resourceType].getBlockBlobClient(fileName);
   // Upload file from disk
   const fileBuffer = await fs.readFile(filePath);
   await blobClient.uploadData(fileBuffer, {
@@ -26,8 +30,8 @@ const uploadImageStream = async (fileName, filePath, mimeType) => {
   return blobClient.url;
 }
 
-const deleteBlob = async (blobName) => {
-  const blobClient = imagesContainerClient.getBlockBlobClient(blobName);
+const deleteBlob = async (blobName, resourceType) => {
+  const blobClient = containerClients[resourceType].getBlockBlobClient(blobName);
   try {
     await blobClient.delete();
   } catch (error) {
@@ -41,8 +45,9 @@ const deleteBlob = async (blobName) => {
 }
 
 
-const handleImageUpload = async (req, res) => {
+const handleFileUpload = async (req, res) => {
   const { id } = req.params;
+  const resourceType = req.path.includes('/image') ? 'image' : 'analytic';
 
   if (!id) {
     return res.status(400).json({ message: 'clinicalHistoryId is required' });
@@ -51,7 +56,7 @@ const handleImageUpload = async (req, res) => {
   const clinicalHistory = await ClinicalHistory.findById(id);
 
   if (!clinicalHistory) {
-    logger.error(`handleImageUpload - Clinical history with id ${id} was not found`);
+    logger.error(`handleFileUpload - Clinical history with id ${id} was not found`);
     return res.status(404).json({ message: 'Clinical history not found' });
   }
 
@@ -63,70 +68,80 @@ const handleImageUpload = async (req, res) => {
 
   try {
 
-    logger.debug(`handleImageUpload - Extracted metadata: ${fileName}, ${filePath}, ${mimeType}, ${originalName}`);
+    logger.debug(`handleFileUpload - Extracted metadata: ${fileName}, ${filePath}, ${mimeType}, ${originalName}`);
 
-    const imageUrl = await uploadImageStream(fileName, filePath, mimeType);
-    logger.info(`handleImageUpload - File uploaded to Azure Blob Storage: ${imageUrl}`);
-    
-    clinicalHistory.images.push({ name: fileName, url: imageUrl, originalName: originalName });
+    const url = await uploadFileStream(fileName, filePath, mimeType, resourceType);
+    logger.info(`handleFileUpload - File uploaded to Azure Blob Storage: ${url}`);
+
+    if (resourceType === 'image') {
+      clinicalHistory.images.push({ name: fileName, url: url, originalName: originalName });
+    } else {
+      clinicalHistory.analytics.push({ name: fileName, url: url, originalName: originalName });
+    }
 
     await clinicalHistory.save();
-    logger.info(`handleImageUpload - Image saved to clinical history: ${fileName}`);
+    logger.info(`handleFileUpload - File saved to clinical history: ${fileName}`);
 
-    return res.status(201).json({ message: 'Image uploaded successfully', imageUrl });
+    return res.status(201).json({ message: 'File uploaded successfully', url });
   } catch (error) {
-    logger.error('handleImageUpload - An error ocurred while uploading the file'+error);
+    logger.error('handleFileUpload - An error ocurred while uploading the file'+error);
     
-    logger.info('handleImageUpload - Deleting blob and local file if exists');
+    logger.info('handleFileUpload - Deleting blob and local file if exists');
     await deleteBlob(fileName);
     await fs.unlink(filePath);
 
-    return res.status(500).json({ message: 'Error uploading image' }); 
+    return res.status(500).json({ message: 'Error uploading file' }); 
   }
 }
 
-const deleteImage = async (req, res) => {
-  const { id, imageId } = req.params;
+const deleteFile = async (req, res) => {
+  const { id, fileId } = req.params;
+  const resourceType = req.path.includes('/image') ? 'image' : 'analytic';
 
-  if (!id || !imageId) {
-    return res.status(400).json({ message: 'clinicalHistoryId and imageId are required' });
+  if (!id || !fileId) {
+    return res.status(400).json({ message: 'clinicalHistoryId and fileId are required' });
   }
 
   const clinicalHistory = await ClinicalHistory.findById(id);
 
   if (!clinicalHistory) {
-    logger.error(`deleteImage - Clinical history with id ${id} was not found`);
+    logger.error(`deleteFile - Clinical history with id ${id} was not found`);
     return res.status(404).json({ message: 'Clinical history not found' });
   }
 
-  if (!mongoose.Types.ObjectId.isValid(imageId)) {
-    logger.error(`deleteImage - Image ID ${imageId} is not a valid ObjectId`);
-    return res.status(400).json({ message: 'Image ID is not valid' });
+  if (!mongoose.Types.ObjectId.isValid(fileId)) {
+    logger.error(`deleteFile - File ID ${fileId} is not a valid ObjectId`);
+    return res.status(400).json({ message: 'File ID is not valid' });
   }
 
-  const image = clinicalHistory.images.id(imageId);
+  var file;
+  if (resourceType === 'image') {
+    file = clinicalHistory.images.id(fileId);
+  } else {
+    file = clinicalHistory.analytics.id(fileId);
+  }
 
-  if (!image) {
-    logger.error(`deleteImage - Image with id ${imageId} was not found`);
-    return res.status(404).json({ message: 'Image not found' });
+  if (!file) {
+    logger.error(`deleteFile - File with id ${fileId} was not found`);
+    return res.status(404).json({ message: 'File not found' });
   }
 
   try {
-    logger.debug(`deleteImage - Deleting image: ${image.name}`);
-    await deleteBlob(image.name);
-    logger.debug(`deleteImage - Image deleted from Azure Blob Storage: ${image.name}`);
-    image.deleteOne();
+    logger.debug(`deleteFile - Deleting file: ${file.name}`);
+    await deleteBlob(file.name, resourceType);
+    logger.debug(`deleteFile - File deleted from Azure Blob Storage: ${file.name}`);
+    file.deleteOne();
     await clinicalHistory.save();
 
-    logger.info(`deleteImage - Image deleted successfully: ${image.name}`);
-    return res.status(200).json({ message: 'Image deleted successfully' });
+    logger.info(`deleteFile - File deleted successfully: ${file.name}`);
+    return res.status(200).json({ message: 'File deleted successfully' });
   } catch (error) {
-    logger.error('deleteImage - Error deleting the image', error);
-    return res.status(500).json({ message: 'Error deleting image' });
+    logger.error('deleteFile - Error deleting the file', error);
+    return res.status(500).json({ message: 'Error deleting file' });
   }
 }
 
 export {
-  handleImageUpload,
-  deleteImage
+  handleFileUpload,
+  deleteFile
 };

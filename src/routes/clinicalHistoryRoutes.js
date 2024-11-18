@@ -25,7 +25,9 @@ router.delete('/:id/condition/:currentConditionId', currentConditionController.d
 router.put('/:id/condition/:currentConditionId', currentConditionController.updateCurrentCondition);
 
 // File routes
-router.post('/:id/image', uploadMiddleware, fileController.handleImageUpload);
-router.delete('/:id/image/:imageId', fileController.deleteImage);
+router.post('/:id/image', uploadMiddleware, fileController.handleFileUpload);
+router.delete('/:id/image/:fileId', fileController.deleteFile);
+router.post('/:id/analytic', uploadMiddleware, fileController.handleFileUpload);
+router.delete('/:id/analytic/:fileId', fileController.deleteFile);
 
 export default router;
