@@ -15,10 +15,10 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
         { name: 'Blood Pressure Medication', startDate: new Date(), endDate: new Date(), instructions: 'Take once daily' }
       ],
       images: [
-        { name: 'X-ray', url: 'http://example.com/xray.jpg', date: new Date() }
+        { name: 'X-ray', url: 'http://example.com/xray.jpg', date: new Date(), originalName: 'xray.jpg' }
       ],
       analitycs: [
-        { name: 'Blood Test', url: 'http://example.com/bloodtest.pdf', date: new Date() }
+        { name: 'Blood Test', url: 'http://example.com/bloodtest.pdf', date: new Date(), originalName: 'bloodtest.pdf' }
       ],
       allergies: ['Peanuts', 'Dust']
     };
@@ -66,7 +66,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       currentConditions: [],
       treatments: [],
       images: [
-        { name: 'X-ray', url: 'invalid-url', date: new Date() }
+        { name: 'X-ray', url: 'invalid-url', date: new Date(), originalName: 'xray.jpg' }
       ],
       analitycs: [],
       allergies: []

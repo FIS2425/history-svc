@@ -280,6 +280,133 @@ paths:
           description: Clinical history or current condition not found
         '500':
           description: Error updating current condition
+  /histories/{id}/image:
+    post:
+      summary: Upload an image to a clinical history record
+      description: Allows uploading an image to an existing clinical history record.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history record.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The image file to upload.
+      responses:
+        '201':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Image uploaded successfully
+                  imageUrl:
+                    type: string
+                    description: URL of the uploaded image.
+        '400':
+          description: Bad Request - Missing required headers or Clinical History ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: clinicalHistoryId is required
+        '404':
+          description: Clinical History record not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Clinical history not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error occurred.
+  /histories/{id}/image/{imageId}:
+    delete:
+      summary: Delete an image from a clinical history record
+      description: Deletes a specific image associated with a clinical history record by its ID. Also removes the file from Azure Blob Storage.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history record.
+          schema:
+            type: string
+        - name: imageId
+          in: path
+          required: true
+          description: The ID of the image to delete.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Image deleted successfully
+        '400':
+          description: Bad Request - Missing or invalid parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: clinicalHistoryId and imageId are required
+        '404':
+          description: Not Found - Clinical history or image not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Clinical history or image not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error deleting image
+                  error:
+                    type: string
+                    example: Detailed error message.
 components:
   schemas:
     ClinicalHistory:

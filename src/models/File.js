@@ -4,7 +4,12 @@ import validator from 'validator';
 const fileSchema = new Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    unique: true
+  },
+  originalName: {
+    type: String,
+    required: true,
   },
   url: {
     type: String,
