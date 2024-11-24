@@ -41,7 +41,7 @@ describe('CLINICAL HISTORY TREATMENT ENDPOINTS TEST', () => {
 
       const response = await request.post(`/histories/${newClinicalHistory._id}/treatment`).send(treatmentData);
       expect(response.status).toBe(400);
-      expect(response.body.errors['treatments.0.endDate']).toContain('End date must be today or in the future');
+      expect(response.body.errors['treatments.0.endDate']).toContain('End date must be greater than or equal to start date');
     });
 
     it('should return 200 and add treatment if clinical history exists', async () => {
@@ -146,7 +146,7 @@ describe('CLINICAL HISTORY TREATMENT ENDPOINTS TEST', () => {
 
       const response = await request.put(`/histories/${newClinicalHistory._id}/treatment/${treatmentId}`).send(updatedTreatmentData);
       expect(response.status).toBe(400);
-      expect(response.body.errors['treatments.0.endDate']).toContain('End date must be today or in the future');
+      expect(response.body.errors['treatments.0.endDate']).toContain('End date must be greater than or equal to start date');
     });
 
     it('should return 200 and update treatment if treatment exists', async () => {

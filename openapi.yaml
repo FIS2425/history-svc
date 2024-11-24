@@ -407,6 +407,133 @@ paths:
                   error:
                     type: string
                     example: Detailed error message.
+  /histories/{id}/analytic:
+    post:
+      summary: Upload an analytic to a clinical history record
+      description: Allows uploading an analytic to an existing clinical history record.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history record.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The analytic file to upload.
+      responses:
+        '201':
+          description: Analytic uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Analytic uploaded successfully
+                  analyticUrl:
+                    type: string
+                    description: URL of the uploaded analytic.
+        '400':
+          description: Bad Request - Missing required headers or Clinical History ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: clinicalHistoryId is required
+        '404':
+          description: Clinical History record not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Clinical history not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error occurred.
+  /histories/{id}/analytic/{analyticId}:
+    delete:
+      summary: Delete an analytic from a clinical history record
+      description: Deletes a specific analytic associated with a clinical history record by its ID. Also removes the file from Azure Blob Storage.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history record.
+          schema:
+            type: string
+        - name: analyticId
+          in: path
+          required: true
+          description: The ID of the analytic to delete.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analytic deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Analytic deleted successfully
+        '400':
+          description: Bad Request - Missing or invalid parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: clinicalHistoryId and analyticId are required
+        '404':
+          description: Not Found - Clinical history or analytic not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Clinical history or analytic not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error deleting analytic
+                  error:
+                    type: string
+                    example: Detailed error message.
 components:
   schemas:
     ClinicalHistory:
@@ -424,6 +551,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CurrentCondition'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/File'
+        analytics:
+          type: array
+          items:
+            $ref: '#/components/schemas/File'
         createdAt:
           type: string
           format: date-time
@@ -474,3 +609,19 @@ components:
       required:
         - name
         - details
+    File:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the file
+        originalName:
+          type: string
+          description: Original name of the file
+        url:
+          type: string
+          description: URL of the file
+        date:
+          type: string
+          format: date-time
+          description: Date the file was uploaded

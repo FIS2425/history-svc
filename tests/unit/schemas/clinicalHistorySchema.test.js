@@ -17,7 +17,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       images: [
         { name: 'X-ray', url: 'http://example.com/xray.jpg', date: new Date(), originalName: 'xray.jpg' }
       ],
-      analitycs: [
+      analytics: [
         { name: 'Blood Test', url: 'http://example.com/bloodtest.pdf', date: new Date(), originalName: 'bloodtest.pdf' }
       ],
       allergies: ['Peanuts', 'Dust']
@@ -34,7 +34,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       currentConditions: [],
       treatments: [],
       images: [],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
@@ -51,7 +51,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       ],
       treatments: [],
       images: [],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
@@ -68,7 +68,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       images: [
         { name: 'X-ray', url: 'invalid-url', date: new Date(), originalName: 'xray.jpg' }
       ],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
@@ -85,7 +85,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
         { startDate: new Date(), endDate: new Date(), instructions: 'Take once daily' } // Missing 'name'
       ],
       images: [],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
@@ -106,52 +106,12 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       ],
       currentConditions: [],
       images: [],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
     const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
-    await expect(clinicalHistory.validate()).rejects.toThrow('End date must be today or in the future');
-  });
-
-  it('should throw validation error if startDate is before today', async () => {
-    const now = new Date();
-    const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day before
-
-    const clinicalHistoryData = {
-      _id: uuidv4(),
-      patientId: uuidv4(),
-      treatments: [
-        { name: 'Invalid Treatment', startDate: pastDate, endDate: now, instructions: 'Take once daily' }
-      ],
-      currentConditions: [],
-      images: [],
-      analitycs: [],
-      allergies: []
-    };
-
-    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
-    await expect(clinicalHistory.validate()).rejects.toThrow('Start date must be today or in the future');
-  });
-
-  it('should throw validation error if endDate is before today', async () => {
-    const now = new Date();
-    const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day before
-
-    const clinicalHistoryData = {
-      _id: uuidv4(),
-      patientId: uuidv4(),
-      treatments: [
-        { name: 'Invalid Treatment', startDate: now, endDate: pastDate, instructions: 'Take once daily' }
-      ],
-      currentConditions: [],
-      images: [],
-      analitycs: [],
-      allergies: []
-    };
-
-    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
-    await expect(clinicalHistory.validate()).rejects.toThrow('End date must be today or in the future');
+    await expect(clinicalHistory.validate()).rejects.toThrow('End date must be greater than or equal to start date');
   });
 
   it('should throw validation error for currentCondition with date in the future', async () => {
@@ -165,7 +125,7 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
       ],
       treatments: [],
       images: [],
-      analitycs: [],
+      analytics: [],
       allergies: []
     };
 
