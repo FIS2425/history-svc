@@ -71,6 +71,46 @@ describe('CLINICAL HISTORY ENDPOINTS TEST', () => {
     });
   });
 
+  describe('test POST /histories/:id/allergy', () => {
+    it('should return 400 if allergy is not provided', async () => {
+      const response = await request.post(`/histories/${uuidv4()}/allergy`).send({});
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Allergy is required');
+    });
+
+    it('should return 404 if clinical history to add allergy is not found', async () => {
+      const response = await request.post(`/histories/${uuidv4()}/allergy`).send({ allergy: 'Peanuts' });
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Clinical history not found');
+    });
+
+    it('should return 200 and add an allergy to clinical history', async () => {
+      const newClinicalHistory = new ClinicalHistory({ patientId: uuidv4() });
+      await newClinicalHistory.save();
+
+      const response = await request.post(`/histories/${newClinicalHistory._id}/allergy`).send({ allergy: 'Peanuts' });
+      expect(response.status).toBe(200);
+      expect(response.body.allergies).toContain('Peanuts');
+    });
+  });
+
+  describe('test DELETE /histories/:id/allergy/:allergy', () => {
+    it('should return 404 if clinical history to remove allergy is not found', async () => {
+      const response = await request.delete(`/histories/${uuidv4()}/allergy/Peanuts`);
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe('Clinical history not found');
+    });
+
+    it('should return 200 and remove an allergy from clinical history', async () => {
+      const newClinicalHistory = new ClinicalHistory({ patientId: uuidv4(), allergies: ['Peanuts'] });
+      await newClinicalHistory.save();
+
+      const response = await request.delete(`/histories/${newClinicalHistory._id}/allergy/Peanuts`);
+      expect(response.status).toBe(200);
+      expect(response.body.allergies).not.toContain('Peanuts');
+    });
+  });
+
   describe('test DELETE /histories/:id', () => {
     it('should return 404 if clinical history to delete is not found', async () => {
       const response = await request.delete(`/histories/${uuidv4()}`);
