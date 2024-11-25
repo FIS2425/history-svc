@@ -14,6 +14,10 @@ router.get('/:id', clinicalHistoryController.getClinicalHistoryById);
 router.get('/patient/:patientId', clinicalHistoryController.getClinicalHistoryByPatientId);
 router.delete('/:id', clinicalHistoryController.deleteClinicalHistoryById);
 
+// Allergies routes
+router.post('/:id/allergy', clinicalHistoryController.addAllergy);
+router.delete('/:id/allergy/:allergy', clinicalHistoryController.removeAllergy);
+
 // Treatment routes
 router.post('/:id/treatment', treatmentController.addTreatment);
 router.delete('/:id/treatment/:treatmentId', treatmentController.deleteTreatment);

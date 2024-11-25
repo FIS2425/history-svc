@@ -18,12 +18,12 @@ const treatmentSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'End date is required'],
     validate: {
-        validator: function(value) {
-          // Verify that endDate is greater than or equal to startDate
-          return !this.startDate || value >= this.startDate;
-        },
-        message: 'End date must be greater than or equal to start date'
-      }
+      validator: function(value) {
+        // Verify that endDate is greater than or equal to startDate
+        return !this.startDate || value >= this.startDate;
+      },
+      message: 'End date must be greater than or equal to start date'
+    }
   },
   instructions: {
     type: String,

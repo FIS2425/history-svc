@@ -85,6 +85,67 @@ const getClinicalHistoryByPatientId = async (req, res) => {
   }
 }
 
+// Add an allergy to the allergies set in a clinical history
+const addAllergy = async (req, res) => {
+  const clinicalHistoryId = req.params.id;
+  const { allergy } = req.body;
+  if (!clinicalHistoryId) {
+    logger.error('addAllergy - Clinical history ID is required');
+    return res.status(400).json({ message: 'Clinical history ID is required' });
+  }
+  if (!allergy) {
+    logger.error('addAllergy - Allergy is required');
+    return res.status(400).json({ message: 'Allergy is required' });
+  }
+  try {
+    const clinicalHistory = await ClinicalHistory.findByIdAndUpdate(
+      clinicalHistoryId,
+      { $addToSet: { allergies: allergy } },
+      { new: true }
+    );
+    if (!clinicalHistory) {
+      logger.error(`addAllergy - Clinical history with id ${clinicalHistoryId} was not found`);
+      return res.status(404).json({ message: 'Clinical history not found' });
+    }
+    logger.info(`addAllergy - Allergy added to clinical history with id ${clinicalHistoryId}`);
+    res.status(200).json(clinicalHistory);
+  } catch (error) {
+    logger.error(`addAllergy - Error adding allergy to clinical history with id ${clinicalHistoryId} :${error}`);
+    res.status(500).json({ message: 'Error adding allergy to clinical history' });
+  }
+}
+
+
+// Remove an allergy from the allergies set in a clinical history
+const removeAllergy = async (req, res) => {
+  const clinicalHistoryId = req.params.id;
+  const { allergy } = req.params;
+  if (!clinicalHistoryId) {
+    logger.error('removeAllergy - Clinical history ID is required');
+    return res.status(400).json({ message: 'Clinical history ID is required' });
+  }
+  if (!allergy) {
+    logger.error('removeAllergy - Allergy is required');
+    return res.status(400).json({ message: 'Allergy is required' });
+  }
+  try {
+    const clinicalHistory = await ClinicalHistory.findByIdAndUpdate(
+      clinicalHistoryId,
+      { $pull: { allergies: allergy } },
+      { new: true }
+    );
+    if (!clinicalHistory) {
+      logger.error(`removeAllergy - Clinical history with id ${clinicalHistoryId} was not found`);
+      return res.status(404).json({ message: 'Clinical history not found' });
+    }
+    logger.info(`removeAllergy - Allergy removed from clinical history with id ${clinicalHistoryId}`);
+    res.status(200).json(clinicalHistory);
+  } catch (error) {
+    logger.error(`removeAllergy - Error removing allergy from clinical history with id ${clinicalHistoryId} :${error}`);
+    res.status(500).json({ message: 'Error removing allergy from clinical history' });
+  }
+}
+
 // Delete a clinical history by ID
 const deleteClinicalHistoryById = async (req, res) => {
   const clinicalHIstoryId = req.params.id;
@@ -132,6 +193,8 @@ export {
   getAllClinicalHistories,
   getClinicalHistoryById,
   getClinicalHistoryByPatientId,
+  addAllergy,
+  removeAllergy,
   deleteClinicalHistoryById,
   deleteClinicalHistoryByPatientId
 };
