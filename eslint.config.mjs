@@ -10,7 +10,7 @@ export default [
     rules: {
       'no-empty': ['error', { allowEmptyCatch: true }],
       '@stylistic/js/quotes': ['error', 'single', { avoidEscape: true }],
-      '@stylistic/js/linebreak-style': ['error', 'unix'],
+      '@stylistic/js/linebreak-style': 0,
       '@stylistic/js/indent': ['error', 2],
     },
     languageOptions: {
