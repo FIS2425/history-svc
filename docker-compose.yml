@@ -1,10 +1,8 @@
-version: "3.8"
-
 services:
   mongodb:
     restart: unless-stopped
     image: mongo:latest
-    container_name: mongodb
+    container_name: mongodb-history
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGOADMIN}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGOPASS}
@@ -15,12 +13,12 @@ services:
     volumes:
       - mongo-data:/data/db
 
-  template:
+  history:
     restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: template
+    container_name: history
     environment:
       - MONGOURL=${MONGOURL}
       - MONGOADMIN=${MONGOADMIN}
