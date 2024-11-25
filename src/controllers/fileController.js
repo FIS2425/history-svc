@@ -56,7 +56,12 @@ const handleFileUpload = async (req, res) => {
   const clinicalHistory = await ClinicalHistory.findById(id);
 
   if (!clinicalHistory) {
-    logger.error(`handleFileUpload - Clinical history with id ${id} was not found`);
+    logger.error(`handleFileUpload - Clinical history with id ${id} was not found`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     return res.status(404).json({ message: 'Clinical history not found' });
   }
 
@@ -71,7 +76,12 @@ const handleFileUpload = async (req, res) => {
     logger.debug(`handleFileUpload - Extracted metadata: ${fileName}, ${filePath}, ${mimeType}, ${originalName}`);
 
     const url = await uploadFileStream(fileName, filePath, mimeType, resourceType);
-    logger.info(`handleFileUpload - File uploaded to Azure Blob Storage: ${url}`);
+    logger.info(`handleFileUpload - File uploaded to Azure Blob Storage: ${url}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
 
     if (resourceType === 'image') {
       clinicalHistory.images.push({ name: fileName, url: url, originalName: originalName });
@@ -80,13 +90,29 @@ const handleFileUpload = async (req, res) => {
     }
 
     await clinicalHistory.save();
-    logger.info(`handleFileUpload - File saved to clinical history: ${fileName}`);
+    logger.info(`handleFileUpload - File saved to clinical history: ${fileName}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
 
     return res.status(201).json({ message: 'File uploaded successfully', url });
   } catch (error) {
-    logger.error('handleFileUpload - An error ocurred while uploading the file'+error);
+    logger.error('handleFileUpload - An error ocurred while uploading the file', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+      error: error
+    });
     
-    logger.info('handleFileUpload - Deleting blob and local file if exists');
+    logger.info('handleFileUpload - Deleting blob and local file if exists', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     await deleteBlob(fileName);
     await fs.unlink(filePath);
 
@@ -105,12 +131,22 @@ const deleteFile = async (req, res) => {
   const clinicalHistory = await ClinicalHistory.findById(id);
 
   if (!clinicalHistory) {
-    logger.error(`deleteFile - Clinical history with id ${id} was not found`);
+    logger.error(`deleteFile - Clinical history with id ${id} was not found`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     return res.status(404).json({ message: 'Clinical history not found' });
   }
 
   if (!mongoose.Types.ObjectId.isValid(fileId)) {
-    logger.error(`deleteFile - File ID ${fileId} is not a valid ObjectId`);
+    logger.error(`deleteFile - File ID ${fileId} is not a valid ObjectId`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     return res.status(400).json({ message: 'File ID is not valid' });
   }
 
@@ -122,21 +158,42 @@ const deleteFile = async (req, res) => {
   }
 
   if (!file) {
-    logger.error(`deleteFile - File with id ${fileId} was not found`);
+    logger.error(`deleteFile - File with id ${fileId} was not found`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     return res.status(404).json({ message: 'File not found' });
   }
 
   try {
     logger.debug(`deleteFile - Deleting file: ${file.name}`);
     await deleteBlob(file.name, resourceType);
-    logger.debug(`deleteFile - File deleted from Azure Blob Storage: ${file.name}`);
+    logger.debug(`deleteFile - File deleted from Azure Blob Storage: ${file.name}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     file.deleteOne();
     await clinicalHistory.save();
 
-    logger.info(`deleteFile - File deleted successfully: ${file.name}`);
+    logger.info(`deleteFile - File deleted successfully: ${file.name}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
     return res.status(200).json({ message: 'File deleted successfully' });
   } catch (error) {
-    logger.error('deleteFile - Error deleting the file', error);
+    logger.error('deleteFile - Error deleting the file', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+      error: error
+    });
     return res.status(500).json({ message: 'Error deleting file' });
   }
 }

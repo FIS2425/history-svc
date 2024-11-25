@@ -1,14 +1,24 @@
 import logger from '../config/logger.js';
 
 const requestLogger = (req, res, next) => {
-  const { method, url } = req;
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const { method, originalUrl } = req;
+  const ip = req.headers?.['x-forwarded-for'] || req.socket.remoteAddress;
 
-  logger.info(`Method: ${method}, URL: ${url}, IP: ${ip}`);
-  // For debugging purposes, we can log the request body if it is not empty
+  const logData = {
+    method: method,
+    url: originalUrl,
+    ip: ip,
+  };
+  
   if (Object.keys(req.body).length > 0) {
-    logger.debug(`Request body: ${JSON.stringify(req.body)}`);
+    logData.body = req.body;
   }
+  if (req.headers?.requestId) {
+    logData.requestId = req.headers.requestId;
+  }
+  
+  // Log the request details
+  logger.info(`${method} - ${originalUrl}`, logData);
   next();
 };
 
