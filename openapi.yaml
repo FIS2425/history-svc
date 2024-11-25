@@ -106,6 +106,128 @@ paths:
           description: Patient ID is required
         '500':
           description: Error deleting clinical history for patient
+  /histories/{id}/allergy:
+    post:
+      summary: Add an allergy to a clinical history
+      description: Adds an allergy to the allergies set in a specific clinical history.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allergy:
+                  type: string
+                  description: The name of the allergy to add.
+              required:
+                - allergy
+      responses:
+        '200':
+          description: Allergy successfully added to the clinical history.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  allergies:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Missing clinical history ID or allergy in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Clinical history not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error while adding the allergy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /histories/{id}/allergy/{allergy}:
+    delete:
+      summary: Remove an allergy from a clinical history
+      description: Removes an allergy from the allergies set in a specific clinical history.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the clinical history.
+          schema:
+            type: string
+        - name: allergy
+          in: path
+          required: true
+          description: The name of the allergy to remove.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Allergy successfully removed from the clinical history.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  allergies:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Missing clinical history ID or allergy in the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Clinical history not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error while removing the allergy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /histories/{id}/treatment:
     post:
       summary: Add a new treatment to a clinical history
