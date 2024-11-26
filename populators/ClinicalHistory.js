@@ -15,6 +15,14 @@ const connectToDatabase = async () => {
     });
 };
 
+const removeAllClinicalHistories = async () => {
+  try {
+    await ClinicalHistory.deleteMany({});
+    console.log('All clinical histories have been removed');
+  } catch (error) {
+    console.error('Error removing clinical histories:', error);
+  }
+};
 
 const sampleClinicalHistories = [
   {
@@ -43,18 +51,92 @@ const sampleClinicalHistories = [
     images: [
       {
         date: '2021-01-01',
-        name: 'Blood pressure chart',
+        name: 'blood-pressure-chart'+uuidv4()+'.png',
+        originalName: 'blood-pressure-chart.png',
         url: 'https://www.example.com/blood-pressure-chart.png',
       }
     ],
     analytics: [
       {
         date: '2021-01-01',
-        name: 'Blood pressure',
+        name: 'blood-pressure'+uuidv4()+'.csv',
+        originalName: 'blood-pressure.csv',
         url: 'https://www.example.com/blood-pressure.csv',
       }
     ],
     allergies: ['Penicillin'],
+  },
+  {
+    _id: uuidv4(),
+    patientId: uuidv4(),
+    currentConditions: [
+      {
+        name: 'Asthma',
+        details: 'Exercise-induced asthma',
+        since: '2019-01-01',
+      }
+    ],
+    treatments: [ 
+      {
+        name: 'Albuterol inhaler 90mcg',
+        instructions: 'Use as needed for shortness of breath',
+        startDate: '2019-01-01',
+        endDate: '2021-01-01',
+      }
+    ],
+    images: [
+      {
+        date: '2021-01-01',
+        name: 'pulmonary-function-test'+uuidv4()+'.png',
+        originalName: 'pulmonary-function-test.png',
+        url: 'https://www.example.com/pulmonary-function-test.png',
+      }
+    ],
+    analytics: [
+      {
+        date: '2021-01-01',
+        name: 'pulmonary-function'+uuidv4()+'.csv',
+        originalName: 'pulmonary-function.csv',
+        url: 'https://www.example.com/pulmonary-function.csv',
+      }
+    ],
+    allergies: ['Peanuts'],
+  },
+  {
+    _id: uuidv4(),
+    patientId: uuidv4(),
+    currentConditions: [
+      {
+        name: 'Depression',
+        details: 'Major depressive disorder',
+        since: '2020-01-01',
+      }
+    ],
+    treatments: [ 
+      {
+        name: 'Sertraline 50mg',
+        instructions: 'Take 1 tablet daily',
+        startDate: '2020-01-01',
+        endDate: '2021-01-01',
+      }
+    ],
+    images: [
+      {
+        date: '2021-01-01',
+        name: 'phq-9'+uuidv4()+'.png',
+        originalName: 'phq-9.png',
+        url: 'https://www.example.com/phq-9.png',
+      }
+    ],
+    analytics: [
+      {
+        date: '2021-01-01',
+        name: 'phq-9'+uuidv4()+'.csv',
+        originalName: 'phq-9.csv',
+        url: 'https://www.example.com/phq-9.csv',
+      }
+    ],
+    allergies: [],
   }
 ];
 
@@ -76,5 +158,6 @@ async function populateClinicalHistories() {
 
 (async () => {
   await connectToDatabase();
+  await removeAllClinicalHistories();
   await populateClinicalHistories();
 })();

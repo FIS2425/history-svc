@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 const populatorName = process.argv[2];
 
 if (!populatorName) {
-  console.error("Por favor, proporciona el nombre del archivo populator (por ejemplo, 'Appointments').");
+  console.error("Por favor, proporciona el nombre del archivo populator (por ejemplo, 'ClinicalHistory').");
   process.exit(1);
 }
 
