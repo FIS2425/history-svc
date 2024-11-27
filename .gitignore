@@ -17,5 +17,11 @@ seeders
 # Mac files
 .DS_Store
 
+# uploads
+uploads
+
 # Logs
 logs
+
+# Kubernetes secrets
+secrets.yaml
