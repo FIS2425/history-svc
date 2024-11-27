@@ -7,36 +7,38 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGOADMIN}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGOPASS}
     networks:
-      - backend
+      - history
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
-      - mongo-data:/data/db
+      - mongo-history:/data/db
 
-  history:
+  history-svc:
     restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: history
+    container_name: history-svc
     environment:
-      - MONGOURL=${MONGOURL}
-      - MONGOADMIN=${MONGOADMIN}
-      - MONGOPASS=${MONGOPASS}
-      - MONGOURL=${MONGOURL}
+      - MONGOURL=mongodb://${MONGOADMIN}:${MONGOPASS}@mongodb:27017/history?authSource=admin
       - NODE_ENV=production
       - API_PREFIX=/api/v1
+      - KAFKA_HOST=${KAFKA_HOST}
+      - AZURE_SAS_TOKEN=${AZURE_SAS_TOKEN}
+      - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
+      - AZURE_IMAGES_CONTAINER_NAME=${AZURE_IMAGES_CONTAINER_NAME}
+      - AZURE_ANALYTICS_CONTAINER_NAME=${AZURE_ANALYTICS_CONTAINER_NAME}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - mongodb
     networks:
-      - backend
+      - history
     ports:
-      - "3001:3001"
+      - "3005:3005"
 
 volumes:
-  mongo-data:
+  mongo-history:
 
 networks:
-  backend:
+  history:
     driver: bridge
