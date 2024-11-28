@@ -55,7 +55,10 @@ spec:
                   name: history-secrets
                   key: KAFKA_HOST
             - name: MONGOURL
-              value: mongodb://$(MONGOADMIN):$(MONGOPASS)@mongodb:27017/history?authSource=admin
+              valueFrom:
+                secretKeyRef:
+                  name: history-secrets
+                  key: MONGOURL
             - name: NODE_ENV
               value: production
           image: ghcr.io/fis2425/history-svc:latest
