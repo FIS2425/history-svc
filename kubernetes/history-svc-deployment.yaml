@@ -58,7 +58,7 @@ spec:
               value: mongodb://$(MONGOADMIN):$(MONGOPASS)@mongodb:27017/history?authSource=admin
             - name: NODE_ENV
               value: production
-          image: history-svc
+          image: ghcr.io/fis2425/history-svc:latest
           name: history-svc
           ports:
             - containerPort: 3005
