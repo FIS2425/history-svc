@@ -1,5 +1,6 @@
 import ClinicalHistory from '../models/ClinicalHistory.js';
 import logger from '../config/logger.js';
+import pdfkit from 'pdfkit';
 
 
 // Create a new clinical history given a patient ID
@@ -361,6 +362,226 @@ const deleteClinicalHistoryByPatientId = async (req, res) => {
   }
 }
 
+const getPdfReport = async (req, res) => {
+  const clinicalHistoryId = req.params.id;
+  if (!clinicalHistoryId) {
+    logger.error('getPdfReport - Clinical history ID is required', {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+    return res.status(400).json({ message: 'Clinical history ID is required' });
+  }
+  try {
+    const clinicalHistory = await ClinicalHistory.findById(clinicalHistoryId);
+    if (!clinicalHistory) {
+      logger.error(`getPdfReport - Clinical history with id ${clinicalHistoryId} was not found`, {
+        method: req.method,
+        url: req.originalUrl,
+        ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+        requestId: req.headers && req.headers['x-request-id'] || null,
+      });
+      return res.status(404).json({ message: 'Clinical history not found' });
+    }
+    const stream = res.writeHead(200, {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename=clinical-history-report.pdf',
+    });
+
+    const doc = new pdfkit();
+
+    doc.pipe(stream);
+
+    // Patient info
+    // name, surname, birthdate, dni, city
+    const patient = {
+      name: 'John',
+      surname: 'Doe',
+      birthdate: '01-01-1970',
+      dni: '12345678Z',
+      city: 'Barcelona'
+    }
+
+    // Clinic info
+    // name, city, district, postalCode, countryCode
+    const clinic = {
+      name: 'Clinic Name',
+      city: 'Barcelona',
+      district: 'Sants',
+      postalCode: '08001',
+      countryCode: 'ES'
+    }
+
+    // Appointments
+    // [{specialty, type, appointmentDate}] --> status = completed
+    const appointments = [
+      {
+        specialty: 'Cardiology',
+        type: 'First visit',
+        appointmentDate: '01-01-2021'
+      },
+      {
+        specialty: 'Cardiology',
+        type: 'Follow-up',
+        appointmentDate: '01-02-2021'
+      }
+    ]
+    
+    // Conditions
+    // [{name, details, since}]
+    const conditions = [
+      {
+        name: 'Hypertension',
+        details: 'High blood pressure',
+        since: '01-01-2020'
+      },
+      {
+        name: 'Diabetes',
+        details: 'High blood sugar',
+        since: '01-01-2020'
+      }
+    ]
+
+    // Treatments
+    // [{name, startDate, endDate, instructions}]
+    const treatments = [
+      {
+        name: 'Insulin',
+        startDate: '01-01-2020',
+        endDate: '01-01-2021',
+        instructions: 'Inject once a day'
+      },
+      {
+        name: 'Metformin',
+        startDate: '01-01-2020',
+        endDate: '01-01-2021',
+        instructions: 'Take with food'
+      }
+    ]
+
+    // Allergies
+    // [string]
+    const allergies = ['Peanuts', 'Penicillin']
+    
+    // Header
+    doc.fontSize(12).font('Helvetica-Bold').text('CloudMedix', {align: 'right'}).font('Helvetica').text('Clinic Name', {align: 'right'});
+    doc.moveDown(1);
+
+    // Title Section
+    doc.fontSize(18).font('Helvetica-Bold').text('Clinical History Report', { align: 'center' });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    doc.fontSize(12).font('Helvetica');
+
+    // Patient Information
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('PATIENT IDENTIFICATION');
+    doc.moveDown(0.5);
+    doc.font('Helvetica-Bold').fillOpacity(1).text(`${patient.name} ${patient.surname}`);
+    doc.font('Helvetica').text(`Birthdate: ${patient.birthdate}`, { indent: 20 });
+    doc.font('Helvetica').text(`DNI: ${patient.dni}`, { indent: 20 });
+    doc.font('Helvetica').text(`City: ${patient.city}`, { indent: 20 });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Clinic Information
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('CLINIC INFORMATION');
+    doc.moveDown(0.5);
+    doc.font('Helvetica-Bold').fillOpacity(1).text(`${clinic.name}`);
+    doc.font('Helvetica').text(`City: ${clinic.city}`, { indent: 20 });
+    doc.font('Helvetica').text(`District: ${clinic.district}`, { indent: 20 });
+    doc.font('Helvetica').text(`Postal Code: ${clinic.postalCode}`, { indent: 20 });
+    doc.font('Helvetica').text(`Country Code: ${clinic.countryCode}`, { indent: 20 });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Appointments Section
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('APPOINTMENTS');
+    doc.moveDown(0.5);
+    appointments.forEach((appointment) => {
+      doc.font('Helvetica-Bold').fillOpacity(1).text(`${appointment.specialty}`);
+      doc.font('Helvetica').text(`${appointment.type} - ${appointment.appointmentDate}`, { indent: 20 });
+      doc.moveDown(0.5);
+      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+      doc.undash();
+      doc.moveDown(0.5);
+    });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Conditions Section
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('MEDICAL CONDITIONS');
+    doc.moveDown(0.5);
+    conditions.forEach((condition) => {
+      doc.font('Helvetica-Bold').fillOpacity(1).text(`${condition.name}`);
+      doc.font('Helvetica').text(`Details: ${condition.details}`, { indent: 20 });
+      doc.font('Helvetica').text(`Since: ${condition.since}`, { indent: 20 });
+      doc.moveDown(0.5);
+      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+      doc.undash();
+      doc.moveDown(0.5);
+    });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Treatments Section
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('TREATMENTS');
+    doc.moveDown(0.5);
+    treatments.forEach((treatment) => {
+      doc.font('Helvetica-Bold').fillOpacity(1).text(`${treatment.name}`);
+      doc.font('Helvetica').text(`Start Date: ${treatment.startDate}`, { indent: 20 });
+      doc.font('Helvetica').text(`End Date: ${treatment.endDate}`, { indent: 20 });
+      doc.font('Helvetica').text(`Instructions: ${treatment.instructions}`, { indent: 20 });
+      doc.moveDown(0.5);
+      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+      doc.undash();
+      doc.moveDown(0.5);
+    });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Allergies Section
+    doc.font('Helvetica-Bold').fillOpacity(0.5).text('ALLERGIES');
+    doc.moveDown(0.5);
+    allergies.forEach((allergy, index) => {
+      doc.font('Helvetica').fillOpacity(1).text(`${index + 1}. ${allergy}`);
+    });
+    doc.moveDown(1);
+    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
+    doc.moveDown(1);
+
+    // Footer
+    doc.fontSize(10).font('Helvetica-Oblique')
+      .text('Generated on: ' + new Date().toLocaleDateString(), { align: 'right'})
+      .fontSize(10).font('Helvetica-Bold')
+      .text('CloudMedix', { align: 'right'});
+
+    doc.end();
+
+    logger.info(`getPdfReport - Clinical history report generated for clinical history with id ${clinicalHistoryId}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+  } catch (error) {
+    logger.error(`getPdfReport - Error generating clinical history report with id ${clinicalHistoryId} :${error.message}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+    res.status(500).json({ message: 'Error generating clinical history report' });
+  }
+}
+
 export {
   createClinicalHistory,
   getAllClinicalHistories,
@@ -369,5 +590,6 @@ export {
   addAllergy,
   removeAllergy,
   deleteClinicalHistoryById,
-  deleteClinicalHistoryByPatientId
+  deleteClinicalHistoryByPatientId,
+  getPdfReport
 };
