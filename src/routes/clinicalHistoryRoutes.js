@@ -13,6 +13,7 @@ router.get('/', clinicalHistoryController.getAllClinicalHistories);
 router.get('/:id', clinicalHistoryController.getClinicalHistoryById);
 router.get('/patient/:patientId', clinicalHistoryController.getClinicalHistoryByPatientId);
 router.delete('/:id', clinicalHistoryController.deleteClinicalHistoryById);
+router.get('/:id/report', clinicalHistoryController.getPdfReport);
 
 // Allergies routes
 router.post('/:id/allergy', clinicalHistoryController.addAllergy);
