@@ -728,6 +728,10 @@ components:
           type: string
           format: date
           description: When the condition started
+        until:
+          type: string
+          format: date
+          description: When the condition ended
       required:
         - name
         - details
