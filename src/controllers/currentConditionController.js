@@ -15,7 +15,7 @@ const addCurrentCondition = async (req, res) => {
     return res.status(400).json({ message: 'Clinical history ID is required' });
   }
   
-  const { name, details, since } = req.body;
+  const { name, details, since, until } = req.body;
   
   try {
     const clinicalHistory = await ClinicalHistory.findById(clinicalHistoryId);
@@ -28,7 +28,7 @@ const addCurrentCondition = async (req, res) => {
       });
       return res.status(404).json({ message: 'Clinical history not found' });
     }
-    clinicalHistory.currentConditions.push({ name, details, since });
+    clinicalHistory.currentConditions.push({ name, details, since, until });
 
     await clinicalHistory.save();
 
@@ -172,7 +172,7 @@ const updateCurrentCondition = async (req, res) => {
     return res.status(400).json({ message: 'Current condition ID is not valid' });
   }
 
-  const { name, details, since } = req.body;
+  const { name, details, since, until } = req.body;
   try {
     const clinicalHistory = await ClinicalHistory.findById(clinicalHistoryId);
     if (!clinicalHistory) {
@@ -197,6 +197,8 @@ const updateCurrentCondition = async (req, res) => {
     if (name) currentCondition.name = name;
     if (details) currentCondition.details = details;
     if (since) currentCondition.since = since;
+    if (until) currentCondition.until = until;
+    
     await clinicalHistory.save();
     logger.info(`updateCurrentCondition - Current condition with id ${currentConditionId} updated in clinical history with id ${clinicalHistoryId}`, {
       method: req.method,
