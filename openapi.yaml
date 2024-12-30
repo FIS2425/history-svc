@@ -695,9 +695,9 @@ paths:
 components:
   securitySchemes:
     jwt:
-      type: apiKey
-      in: cookie
-      name: token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     ClinicalHistory:
       type: object
