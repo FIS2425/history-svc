@@ -104,6 +104,15 @@ const getClinicalHistoryById = async (req, res) => {
       });
       return res.status(404).json({ message: 'Clinical history not found' });
     }
+    if (req.user.roles.includes('patient') && req.user.patientId !== clinicalHistory.patientId) {
+      logger.error(`getClinicalHistoryById - Patient with ID ${req.user.patientId} is not authorized to access clinical history with ID ${clinicalHistoryId}`, {
+        method: req.method,
+        url: req.originalUrl,
+        ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+        requestId: req.headers && req.headers['x-request-id'] || null,
+      });
+      return res.status(403).json({ message: 'Access denied: Insufficient permissions' });
+    }
     logger.info(`getClinicalHistoryById - Clinical history with id ${clinicalHistoryId} was found`, {
       method: req.method,
       url: req.originalUrl,
@@ -145,6 +154,15 @@ const getClinicalHistoryByPatientId = async (req, res) => {
         requestId: req.headers && req.headers['x-request-id'] || null,
       });
       return res.status(404).json({ message: 'Clinical history not found' });
+    }
+    if (req.user.roles.includes('patient') && req.user.patientId !== patientId) {
+      logger.error(`getClinicalHistoryById - Patient with ID ${req.user.patientId} is not authorized to access clinical history from patient with ID ${patientId}`, {
+        method: req.method,
+        url: req.originalUrl,
+        ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+        requestId: req.headers && req.headers['x-request-id'] || null,
+      });
+      return res.status(403).json({ message: 'Access denied: Insufficient permissions' });
     }
     logger.info(`getClinicalHistoryByPatientId - Clinical history with patient id ${patientId} was found`, {
       method: req.method,
@@ -383,6 +401,15 @@ const getPdfReport = async (req, res) => {
         requestId: req.headers && req.headers['x-request-id'] || null,
       });
       return res.status(404).json({ message: 'Clinical history not found' });
+    }
+    if (req.user.roles.includes('patient') && req.user.patientId !== clinicalHistory.patientId) {
+      logger.error(`getClinicalHistoryById - Patient with ID ${req.user.patientId} is not authorized to access clinical history with ID ${clinicalHistoryId}`, {
+        method: req.method,
+        url: req.originalUrl,
+        ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+        requestId: req.headers && req.headers['x-request-id'] || null,
+      });
+      return res.status(403).json({ message: 'Access denied: Insufficient permissions' });
     }
     const stream = res.writeHead(200, {
       'Content-Type': 'application/pdf',
