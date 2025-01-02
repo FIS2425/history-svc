@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@azure/storage-blob": "12.26.0",
+    "axios": "1.7.9",
     "cookie-parser": "1.4.7",
     "cors": "2.8.5",
     "express": "4.21.2",
