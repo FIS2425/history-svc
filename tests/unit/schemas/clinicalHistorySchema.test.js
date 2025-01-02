@@ -133,4 +133,44 @@ describe('CLINICAL HISTORY SCHEMA TESTS', () => {
     await expect(clinicalHistory.validate()).rejects.toThrow('Since must be today or in the past');
   });
 
+  it('should throw validation error if until date is earlier than since date', async () => {
+    const sinceDate = new Date(); // Fecha actual
+    const earlierUntilDate = new Date(sinceDate.getTime() - 24 * 60 * 60 * 1000); // 1 día antes
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      currentConditions: [
+        { name: 'Diabetes', details: 'Type 2 Diabetes', since: sinceDate, until: earlierUntilDate }
+      ],
+      treatments: [],
+      images: [],
+      analytics: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('Since must be less than or equal to Until');
+  });
+
+  it('should throw validation error for currentCondition with until date in the future', async () => {
+    const sinceDate = new Date();
+    const futureUntilDate = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); // 1 day later
+
+    const clinicalHistoryData = {
+      _id: uuidv4(),
+      patientId: uuidv4(),
+      currentConditions: [
+        { name: 'Diabetes', details: 'Type 2 Diabetes', since: sinceDate, until: futureUntilDate }
+      ],
+      treatments: [],
+      images: [],
+      analytics: [],
+      allergies: []
+    };
+
+    const clinicalHistory = new ClinicalHistory(clinicalHistoryData);
+    await expect(clinicalHistory.validate()).rejects.toThrow('Until must be today or in the past');
+  });
+
 });
