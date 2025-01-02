@@ -1,6 +1,7 @@
 import ClinicalHistory from '../models/ClinicalHistory.js';
 import logger from '../config/logger.js';
 import pdfkit from 'pdfkit';
+import axios from 'axios';
 
 
 // Create a new clinical history given a patient ID
@@ -362,6 +363,46 @@ const deleteClinicalHistoryByPatientId = async (req, res) => {
   }
 }
 
+async function getPatient(patientId, token, res) {
+  try {
+    const response = await axios.get(`${process.env.PATIENT_SVC}/patients/${patientId}`, {
+      withCredentials: true,
+      headers: {
+        'Cookie': `token=${token}`
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      res.status(status).json(data);
+    } else {
+      res.status(500).json({ message: 'Internal server error.' });
+    }
+    throw new Error('Failed to fetch patient data');
+  }
+}
+
+async function getAppointments(patientId, token, res) {
+  try {
+    const response = await axios.get(`${process.env.APPOINTMENT_SVC}/appointments/patient/${patientId}`, {
+      withCredentials: true,
+      headers: {
+        'Cookie': `token=${token}`
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      res.status(status).json(data);
+    } else {
+      res.status(500).json({ message: 'Internal server error.' });
+    }
+    throw new Error('Failed to fetch appointments');
+  }
+}
+
 const getPdfReport = async (req, res) => {
   const clinicalHistoryId = req.params.id;
   if (!clinicalHistoryId) {
@@ -373,17 +414,63 @@ const getPdfReport = async (req, res) => {
     });
     return res.status(400).json({ message: 'Clinical history ID is required' });
   }
+  const clinicalHistory = await ClinicalHistory.findById(clinicalHistoryId);
+  if (!clinicalHistory) {
+    logger.error(`getPdfReport - Clinical history with id ${clinicalHistoryId} was not found`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+    return res.status(404).json({ message: 'Clinical history not found' });
+  }
+
+  // Patient info
+  // name, surname, birthdate, dni, city
+  var patient;
   try {
-    const clinicalHistory = await ClinicalHistory.findById(clinicalHistoryId);
-    if (!clinicalHistory) {
-      logger.error(`getPdfReport - Clinical history with id ${clinicalHistoryId} was not found`, {
-        method: req.method,
-        url: req.originalUrl,
-        ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
-        requestId: req.headers && req.headers['x-request-id'] || null,
-      });
-      return res.status(404).json({ message: 'Clinical history not found' });
-    }
+    patient = await getPatient(clinicalHistory.patientId, req.token, res);
+  } catch (error) {
+    logger.error(`getPdfReport - Error fetching patient data for clinical history with id ${clinicalHistoryId} :${error.message}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+    return;
+  }
+
+  // Appointments
+  // [{specialty, type, appointmentDate}] --> status = completed
+  var appointments;
+  try {
+    appointments = await getAppointments(clinicalHistory.patientId, req.token, res);
+  } catch (error) {
+    logger.error(`getPdfReport - Error fetching appointments for clinical history with id ${clinicalHistoryId} :${error.message}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+    return;
+  }
+  
+  // Conditions
+  // [{name, details, since}]
+  const conditions = clinicalHistory.currentConditions;
+
+  // Treatments
+  // [{name, startDate, endDate, instructions}]
+  const treatments = clinicalHistory.treatments;
+
+  // Allergies
+  // [string]
+  const allergies = clinicalHistory.allergies;
+
+  try {
+    const dateFormat = Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const dateTimeFormat = Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
     const stream = res.writeHead(200, {
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'attachment; filename=clinical-history-report.pdf',
@@ -392,80 +479,9 @@ const getPdfReport = async (req, res) => {
     const doc = new pdfkit();
 
     doc.pipe(stream);
-
-    // Patient info
-    // name, surname, birthdate, dni, city
-    const patient = {
-      name: 'John',
-      surname: 'Doe',
-      birthdate: '01-01-1970',
-      dni: '12345678Z',
-      city: 'Barcelona'
-    }
-
-    // Clinic info
-    // name, city, district, postalCode, countryCode
-    const clinic = {
-      name: 'Clinic Name',
-      city: 'Barcelona',
-      district: 'Sants',
-      postalCode: '08001',
-      countryCode: 'ES'
-    }
-
-    // Appointments
-    // [{specialty, type, appointmentDate}] --> status = completed
-    const appointments = [
-      {
-        specialty: 'Cardiology',
-        type: 'First visit',
-        appointmentDate: '01-01-2021'
-      },
-      {
-        specialty: 'Cardiology',
-        type: 'Follow-up',
-        appointmentDate: '01-02-2021'
-      }
-    ]
-    
-    // Conditions
-    // [{name, details, since}]
-    const conditions = [
-      {
-        name: 'Hypertension',
-        details: 'High blood pressure',
-        since: '01-01-2020'
-      },
-      {
-        name: 'Diabetes',
-        details: 'High blood sugar',
-        since: '01-01-2020'
-      }
-    ]
-
-    // Treatments
-    // [{name, startDate, endDate, instructions}]
-    const treatments = [
-      {
-        name: 'Insulin',
-        startDate: '01-01-2020',
-        endDate: '01-01-2021',
-        instructions: 'Inject once a day'
-      },
-      {
-        name: 'Metformin',
-        startDate: '01-01-2020',
-        endDate: '01-01-2021',
-        instructions: 'Take with food'
-      }
-    ]
-
-    // Allergies
-    // [string]
-    const allergies = ['Peanuts', 'Penicillin']
     
     // Header
-    doc.fontSize(12).font('Helvetica-Bold').text('CloudMedix', {align: 'right'}).font('Helvetica').text('Clinic Name', {align: 'right'});
+    doc.fontSize(12).font('Helvetica-Bold').text('CloudMedix', {align: 'right'}).font('Helvetica');
     doc.moveDown(1);
 
     // Title Section
@@ -480,21 +496,9 @@ const getPdfReport = async (req, res) => {
     doc.font('Helvetica-Bold').fillOpacity(0.5).text('PATIENT IDENTIFICATION');
     doc.moveDown(0.5);
     doc.font('Helvetica-Bold').fillOpacity(1).text(`${patient.name} ${patient.surname}`);
-    doc.font('Helvetica').text(`Birthdate: ${patient.birthdate}`, { indent: 20 });
+    doc.font('Helvetica').text(`Birthdate: ${dateFormat.format(new Date(patient.birthdate))}`, { indent: 20 });
     doc.font('Helvetica').text(`DNI: ${patient.dni}`, { indent: 20 });
     doc.font('Helvetica').text(`City: ${patient.city}`, { indent: 20 });
-    doc.moveDown(1);
-    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
-    doc.moveDown(1);
-
-    // Clinic Information
-    doc.font('Helvetica-Bold').fillOpacity(0.5).text('CLINIC INFORMATION');
-    doc.moveDown(0.5);
-    doc.font('Helvetica-Bold').fillOpacity(1).text(`${clinic.name}`);
-    doc.font('Helvetica').text(`City: ${clinic.city}`, { indent: 20 });
-    doc.font('Helvetica').text(`District: ${clinic.district}`, { indent: 20 });
-    doc.font('Helvetica').text(`Postal Code: ${clinic.postalCode}`, { indent: 20 });
-    doc.font('Helvetica').text(`Country Code: ${clinic.countryCode}`, { indent: 20 });
     doc.moveDown(1);
     doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
     doc.moveDown(1);
@@ -502,14 +506,18 @@ const getPdfReport = async (req, res) => {
     // Appointments Section
     doc.font('Helvetica-Bold').fillOpacity(0.5).text('APPOINTMENTS');
     doc.moveDown(0.5);
-    appointments.forEach((appointment) => {
-      doc.font('Helvetica-Bold').fillOpacity(1).text(`${appointment.specialty}`);
-      doc.font('Helvetica').text(`${appointment.type} - ${appointment.appointmentDate}`, { indent: 20 });
-      doc.moveDown(0.5);
-      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
-      doc.undash();
-      doc.moveDown(0.5);
-    });
+    if (appointments && appointments.length > 0) {
+      appointments.forEach((appointment) => {
+        doc.font('Helvetica-Bold').fillOpacity(1).text(`${appointment.specialty}`);
+        doc.font('Helvetica').text(`${appointment.type} - ${dateTimeFormat.format(new Date(appointment.appointmentDate))}`, { indent: 20 });
+        doc.moveDown(0.5);
+        doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+        doc.undash();
+        doc.moveDown(0.5);
+      });
+    } else {
+      doc.font('Helvetica-Italic').fillOpacity(0.7).text('No appointments available.');
+    }
     doc.moveDown(1);
     doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
     doc.moveDown(1);
@@ -517,15 +525,20 @@ const getPdfReport = async (req, res) => {
     // Conditions Section
     doc.font('Helvetica-Bold').fillOpacity(0.5).text('MEDICAL CONDITIONS');
     doc.moveDown(0.5);
-    conditions.forEach((condition) => {
-      doc.font('Helvetica-Bold').fillOpacity(1).text(`${condition.name}`);
-      doc.font('Helvetica').text(`Details: ${condition.details}`, { indent: 20 });
-      doc.font('Helvetica').text(`Since: ${condition.since}`, { indent: 20 });
-      doc.moveDown(0.5);
-      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
-      doc.undash();
-      doc.moveDown(0.5);
-    });
+    if (conditions && conditions.length > 0) {
+      conditions.forEach((condition) => {
+        doc.font('Helvetica-Bold').fillOpacity(1).text(`${condition.name}`);
+        doc.font('Helvetica').text(`Details: ${condition.details}`, { indent: 20 });
+        doc.font('Helvetica').text(`Since: ${dateFormat.format(new Date(condition.since))}`, { indent: 20 });
+        if (condition.until) doc.font('Helvetica').text(`Until: ${dateFormat.format(new Date(condition.until))}`, { indent: 20 });
+        doc.moveDown(0.5);
+        doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+        doc.undash();
+        doc.moveDown(0.5);
+      });
+    } else {
+      doc.font('Helvetica-Italic').fillOpacity(0.7).text('No medical conditions available.');
+    }
     doc.moveDown(1);
     doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
     doc.moveDown(1);
@@ -533,16 +546,20 @@ const getPdfReport = async (req, res) => {
     // Treatments Section
     doc.font('Helvetica-Bold').fillOpacity(0.5).text('TREATMENTS');
     doc.moveDown(0.5);
-    treatments.forEach((treatment) => {
-      doc.font('Helvetica-Bold').fillOpacity(1).text(`${treatment.name}`);
-      doc.font('Helvetica').text(`Start Date: ${treatment.startDate}`, { indent: 20 });
-      doc.font('Helvetica').text(`End Date: ${treatment.endDate}`, { indent: 20 });
-      doc.font('Helvetica').text(`Instructions: ${treatment.instructions}`, { indent: 20 });
-      doc.moveDown(0.5);
-      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
-      doc.undash();
-      doc.moveDown(0.5);
-    });
+    if (treatments && treatments.length > 0) {
+      treatments.forEach((treatment) => {
+        doc.font('Helvetica-Bold').fillOpacity(1).text(`${treatment.name}`);
+        doc.font('Helvetica').text(`Start Date: ${dateFormat.format(new Date(treatment.startDate))}`, { indent: 20 });
+        doc.font('Helvetica').text(`End Date: ${dateFormat.format(new Date(treatment.endDate))}`, { indent: 20 });
+        doc.font('Helvetica').text(`Instructions: ${treatment.instructions}`, { indent: 20 });
+        doc.moveDown(0.5);
+        doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).dash(5, { space: 5 }).stroke('#cccccc');
+        doc.undash();
+        doc.moveDown(0.5);
+      });
+    } else {
+      doc.font('Helvetica-Italic').fillOpacity(0.7).text('No treatments available.');
+    }
     doc.moveDown(1);
     doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
     doc.moveDown(1);
@@ -550,9 +567,13 @@ const getPdfReport = async (req, res) => {
     // Allergies Section
     doc.font('Helvetica-Bold').fillOpacity(0.5).text('ALLERGIES');
     doc.moveDown(0.5);
-    allergies.forEach((allergy, index) => {
-      doc.font('Helvetica').fillOpacity(1).text(`${index + 1}. ${allergy}`);
-    });
+    if (allergies && allergies.length > 0) {
+      allergies.forEach((allergy, index) => {
+        doc.font('Helvetica').fillOpacity(1).text(`${index + 1}. ${allergy}`);
+      });
+    } else {
+      doc.font('Helvetica-Italic').fillOpacity(0.7).text('No allergies available.');
+    }
     doc.moveDown(1);
     doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke('#cccccc');
     doc.moveDown(1);
