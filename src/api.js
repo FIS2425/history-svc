@@ -5,6 +5,7 @@ import YAML from 'yamljs';
 import cookieParser from 'cookie-parser';
 import requestLogger from './middleware/requestLogger.js';
 import clinicalHistoryRoutes from './routes/clinicalHistoryRoutes.js';
+import { verifyToken } from './middleware/verifyToken.js';
 
 
 const swaggerDocument = YAML.load('./openapi.yaml');
@@ -23,7 +24,7 @@ export default function () {
     res.send('API funcionando correctamente');
   });
 
-  app.use(prefix + '/histories', clinicalHistoryRoutes);
+  app.use(prefix + '/histories', verifyToken, clinicalHistoryRoutes);
   app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
   return app;
