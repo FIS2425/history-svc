@@ -1,5 +1,7 @@
 import { exec } from 'child_process';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const populatorName = process.argv[2];
 
 if (!populatorName) {
@@ -9,7 +11,7 @@ if (!populatorName) {
 
 const populatorPath = `./populators/${populatorName}.js`;
 
-exec(`node --env-file=.env ${populatorPath}`, (error, stdout, stderr) => {
+exec(`node ${populatorPath}`, (error, stdout, stderr) => {
   if (error) {
     console.error(`Error al ejecutar el populator: ${error.message}`);
     return;
