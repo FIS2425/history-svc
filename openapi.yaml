@@ -62,6 +62,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Clinical history ID is required
+        '403':
+          description: Access denied
+        '404':
+          description: Clinical history not found
         '500':
           description: Error retrieving clinical history
     delete:
@@ -81,6 +87,33 @@ paths:
           description: Clinical history ID is required
         '500':
           description: Error deleting clinical history
+  /histories/{id}/report:
+    get:
+      summary: Get a clinical history report by its ID
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the requested clinical history report
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Clinical history ID is required
+        '403':
+          description: Access denied
+        '404':
+          description: Clinical history not found
+        '500':
+          description: Error generating clinical history report
   /histories/patient/{patientId}:
     get:
       summary: Get a clinical history by patient ID
@@ -99,6 +132,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClinicalHistory'
+        '400':
+          description: Patient ID is required
+        '403':
+          description: Access denied
+        '404':
+          description: Clinical history not found
         '500':
           description: Error retrieving clinical history for patient
     delete:
