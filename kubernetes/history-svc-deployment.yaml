@@ -61,6 +61,16 @@ spec:
                   key: MONGOURL
             - name: NODE_ENV
               value: production
+            - name: PATIENT_SVC
+              valueFrom:
+                secretKeyRef:
+                  name: history-secrets
+                  key: PATIENT_SVC
+            - name: APPOINTMENT_SVC
+              valueFrom:
+                secretKeyRef:
+                  name: history-secrets
+                  key: APPOINTMENT_SVC
           image: ghcr.io/fis2425/history-svc:latest
           name: history-svc
           ports:
