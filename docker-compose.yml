@@ -9,10 +9,25 @@ services:
     networks:
       - history
     ports:
-      - "27018:27017"
+      - "27022:27017"
     volumes:
       - mongo-history:/data/db
-
+  dragonfly-history:
+    restart: unless-stopped
+    image: ghcr.io/dragonflydb/dragonfly:latest
+    container_name: dragonfly-history
+    command: >
+      --maxmemory=2gb
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+    ports:
+      - "6381:${DRAGONFLY_PORT}"
+    networks:
+      - history
+    volumes:
+      - dragonfly-history:/data/dragonfly
   history-svc:
     restart: unless-stopped
     build:
@@ -21,7 +36,7 @@ services:
     container_name: history-svc
     environment:
       - MONGOURL=mongodb://${MONGOADMIN}:${MONGOPASS}@mongodb:27017/history?authSource=admin
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV}
       - API_PREFIX=/api/v1
       - KAFKA_HOST=${KAFKA_HOST}
       - AZURE_SAS_TOKEN=${AZURE_SAS_TOKEN}
@@ -29,6 +44,10 @@ services:
       - AZURE_IMAGES_CONTAINER_NAME=${AZURE_IMAGES_CONTAINER_NAME}
       - AZURE_ANALYTICS_CONTAINER_NAME=${AZURE_ANALYTICS_CONTAINER_NAME}
       - JWT_SECRET=${JWT_SECRET}
+      - PATIENT_SVC=${PATIENT_SVC}
+      - APPOINTMENT_SVC=${APPOINTMENT_SVC}
+      - DRAGONFLY_HOST=${DRAGONFLY_HOST}
+      - DRAGONFLY_PORT=${DRAGONFLY_PORT}
     depends_on:
       - mongodb
     networks:
@@ -38,6 +57,7 @@ services:
 
 volumes:
   mongo-history:
+  dragonfly-history:
 
 networks:
   history:
