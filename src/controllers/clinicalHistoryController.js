@@ -2,7 +2,7 @@ import ClinicalHistory from '../models/ClinicalHistory.js';
 import logger from '../config/logger.js';
 import pdfkit from 'pdfkit';
 import axios from 'axios';
-
+import CircuitBreaker from 'opossum';
 
 // Create a new clinical history given a patient ID
 const createClinicalHistory = async (req, res) => {
@@ -363,7 +363,7 @@ const deleteClinicalHistoryByPatientId = async (req, res) => {
   }
 }
 
-async function getPatient(patientId, token, res) {
+async function getPatient(patientId, token) {
   try {
     const response = await axios.get(`${process.env.PATIENT_SVC}/patients/${patientId}`, {
       withCredentials: true,
@@ -375,15 +375,14 @@ async function getPatient(patientId, token, res) {
   } catch (error) {
     if (error.response) {
       const { status, data } = error.response;
-      res.status(status).json(data);
-    } else {
-      res.status(500).json({ message: 'Internal server error.' });
+      logger.error(`Failed to fetch patient data. Status: ${status}. Message: ${data.message || 'Unknown error'}`);
+      throw new Error(`Failed to fetch patient data. Status: ${status}. Message: ${data.message || 'Unknown error'}`);
     }
-    throw new Error('Failed to fetch patient data');
+    throw new Error('Failed to fetch patient data. Service is unreachable.');
   }
 }
 
-async function getAppointments(patientId, token, res) {
+async function getAppointments(patientId, token) {
   try {
     const response = await axios.get(`${process.env.APPOINTMENT_SVC}/appointments/patient/${patientId}`, {
       withCredentials: true,
@@ -395,13 +394,32 @@ async function getAppointments(patientId, token, res) {
   } catch (error) {
     if (error.response) {
       const { status, data } = error.response;
-      res.status(status).json(data);
-    } else {
-      res.status(500).json({ message: 'Internal server error.' });
+      logger.error(`Failed to fetch appointments. Status: ${status}. Message: ${data.message || 'Unknown error'}`);
+      throw new Error(`Failed to fetch appointments. Status: ${status}. Message: ${data.message || 'Unknown error'}`);
     }
-    throw new Error('Failed to fetch appointments');
+    throw new Error('Failed to fetch appointments. Service is unreachable.');
   }
 }
+
+const circuitBreakerOptions = {
+  timeout: 5000,
+  errorThresholdPercentage: 50,
+  resetTimeout: 30000
+};
+
+// Circuito para getPatient
+const getPatientBreaker = new CircuitBreaker(getPatient, circuitBreakerOptions);
+
+// Circuito para getAppointments
+const getAppointmentsBreaker = new CircuitBreaker(getAppointments, circuitBreakerOptions);
+
+// Escuchar eventos de los circuitos
+[getPatientBreaker, getAppointmentsBreaker].forEach((breaker, index) => {
+  breaker.on('open', () => logger.warn(`${ index == 0 ? 'Patient' : 'Appointment' } circuit open: No requests allowed.`));
+  breaker.on('close', () => logger.info(`${ index == 0 ? 'Patient' : 'Appointment' } circuit closed: Requests allowed.`));
+  breaker.on('halfOpen', () => logger.info(`${ index == 0 ? 'Patient' : 'Appointment' } circuit half open: Testing disponibility.`));
+  breaker.on('stats', (stats) => logger.info(`${ index == 0 ? 'Patient' : 'Appointment' } circuit stats: ${JSON.stringify(stats)}`));
+});
 
 const getPdfReport = async (req, res) => {
   const clinicalHistoryId = req.params.id;
@@ -429,14 +447,9 @@ const getPdfReport = async (req, res) => {
   // name, surname, birthdate, dni, city
   var patient;
   try {
-    patient = await getPatient(clinicalHistory.patientId, req.token, res);
+    patient = await getPatientBreaker.fire(clinicalHistory.patientId, req.token);
   } catch (error) {
-    logger.error(`getPdfReport - Error fetching patient data for clinical history with id ${clinicalHistoryId} :${error.message}`, {
-      method: req.method,
-      url: req.originalUrl,
-      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
-      requestId: req.headers && req.headers['x-request-id'] || null,
-    });
+    res.status(500).json({ message: error.message });
     return;
   }
 
@@ -444,14 +457,9 @@ const getPdfReport = async (req, res) => {
   // [{specialty, type, appointmentDate}] --> status = completed
   var appointments;
   try {
-    appointments = await getAppointments(clinicalHistory.patientId, req.token, res);
+    appointments = await getAppointmentsBreaker.fire(clinicalHistory.patientId, req.token);
   } catch (error) {
-    logger.error(`getPdfReport - Error fetching appointments for clinical history with id ${clinicalHistoryId} :${error.message}`, {
-      method: req.method,
-      url: req.originalUrl,
-      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
-      requestId: req.headers && req.headers['x-request-id'] || null,
-    });
+    res.status(500).json({ message: error.message });
     return;
   }
   
