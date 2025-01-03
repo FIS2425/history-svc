@@ -3,6 +3,7 @@ import logger from '../config/logger.js';
 import pdfkit from 'pdfkit';
 import axios from 'axios';
 import CircuitBreaker from 'opossum';
+import redisClient from '../config/redis.js';
 
 // Create a new clinical history given a patient ID
 const createClinicalHistory = async (req, res) => {
@@ -446,11 +447,26 @@ const getPdfReport = async (req, res) => {
   // Patient info
   // name, surname, birthdate, dni, city
   var patient;
-  try {
-    patient = await getPatientBreaker.fire(clinicalHistory.patientId, req.token);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    return;
+
+  //Check if the patient is in the cache
+  const cahedPatient = await redisClient.get(`patient:${clinicalHistory.patientId}`);
+  if (cahedPatient) {
+    patient = JSON.parse(cahedPatient);
+    logger.info(`getPdfReport - Patient data retrieved from cache for patient with id ${clinicalHistory.patientId}`, {
+      method: req.method,
+      url: req.originalUrl,
+      ip: req.headers && req.headers['x-forwarded-for'] || req.ip,
+      requestId: req.headers && req.headers['x-request-id'] || null,
+    });
+  } else {
+    try {
+      patient = await getPatientBreaker.fire(clinicalHistory.patientId, req.token);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+      return;
+    }
+    // Save patient in cache for 1 hour
+    redisClient.set(`patient:${clinicalHistory.patientId}`, JSON.stringify(patient), 'EX', 3600);
   }
 
   // Appointments
