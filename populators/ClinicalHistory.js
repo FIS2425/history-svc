@@ -26,8 +26,8 @@ const removeAllClinicalHistories = async () => {
 
 const sampleClinicalHistories = [
   {
-    _id: uuidv4(),
-    patientId: uuidv4(),
+    _id: 'f78ad724-049c-4a0f-8687-4ba16267dc60',
+    patientId: 'f8b8d3e7-4bb7-4d1b-99a4-e3a8f0452f63',
     currentConditions: [
       {
         name: 'Hypertension',
@@ -67,8 +67,8 @@ const sampleClinicalHistories = [
     allergies: ['Penicillin'],
   },
   {
-    _id: uuidv4(),
-    patientId: uuidv4(),
+    _id: '6250c947-f29e-4e73-ae2f-cf6042aeb067',
+    patientId: 'a2c7f9d1-5b3a-42d8-8e5f-7c4b9f1e8a92',
     currentConditions: [
       {
         name: 'Asthma',
@@ -103,8 +103,8 @@ const sampleClinicalHistories = [
     allergies: ['Peanuts'],
   },
   {
-    _id: uuidv4(),
-    patientId: uuidv4(),
+    _id: '3078e2df-69f8-4bd7-9d13-1777eb91c1bf',
+    patientId: 'd4f8b1a9-3e7c-45d2-9c6a-2b9f7e4a8c53',
     currentConditions: [
       {
         name: 'Depression',
@@ -134,6 +134,42 @@ const sampleClinicalHistories = [
         name: 'phq-9'+uuidv4()+'.csv',
         originalName: 'phq-9.csv',
         url: 'https://www.example.com/phq-9.csv',
+      }
+    ],
+    allergies: [],
+  },
+  {
+    _id: 'af1ac113-8bce-4c95-bfde-fb049ef35530',
+    patientId: 'b1a7f9e3-6c5d-49d2-8f4a-3b7e9f5a6c71',
+    currentConditions: [
+      {
+        name: 'Anxiety',
+        details: 'Generalized anxiety disorder',
+        since: '2020-01-01',
+      }
+    ],
+    treatments: [ 
+      {
+        name: 'Buspirone 10mg',
+        instructions: 'Take 1 tablet twice daily',
+        startDate: '2020-01-01',
+        endDate: '2021-01-01',
+      }
+    ],
+    images: [
+      {
+        date: '2021-01-01',
+        name: 'gad-7'+uuidv4()+'.png',
+        originalName: 'gad-7.png',
+        url: 'https://www.example.com/gad-7.png',
+      }
+    ],
+    analytics: [
+      {
+        date: '2021-01-01',
+        name: 'gad-7'+uuidv4()+'.csv',
+        originalName: 'gad-7.csv',
+        url: 'https://www.example.com/gad-7.csv',
       }
     ],
     allergies: [],
