@@ -11,6 +11,11 @@ export default defineConfig({
     setupFiles: './tests/setup/setup.js',
     testMatch: ['**/*.test.js'],
     isolate: true,
+    sequence: {
+      shuffle: false,
+      concurrent: false,
+      hooks: 'stack',
+    }
   },
   resolve: {
     alias: {
