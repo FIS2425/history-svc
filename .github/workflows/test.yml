@@ -6,12 +6,15 @@ on:
       - main
       - develop
 
-env:
-  VITE_JWT_SECRET: ${{ secrets.VITE_JWT_SECRET }}
-
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
 
     steps:
       - name: Checkout ⬇️
@@ -31,3 +34,6 @@ jobs:
 
       - name: Run tests 🧪
         run: npm run test
+        env:
+          VITE_MONGOURL: mongodb://localhost:27017/test
+          VITE_JWT_SECRET: ${{ secrets.VITE_JWT_SECRET }}
