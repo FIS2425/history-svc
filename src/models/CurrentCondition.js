@@ -33,6 +33,9 @@ const currentConditionSchema = new Schema({
     validate: [
       {
         validator: function (value) {
+          if (!value) {
+            return true;
+          }
           // Verify that until is not in the future
           const today = new Date();
           const utc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59));
@@ -43,6 +46,9 @@ const currentConditionSchema = new Schema({
       {
         validator: function (value) {
           // Verify that since <= until
+          if (!value) {
+            return true;
+          }
           return this.since <= value;
         },
         message: 'Since must be less than or equal to Until',
