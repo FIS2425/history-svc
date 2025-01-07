@@ -1,6 +1,6 @@
 # Clinical History API
 
-> Version 1.0.1
+> Version 1.1.1
 
 API to manage patient clinical histories.
 
@@ -23,6 +23,7 @@ API to manage patient clinical histories.
 | PUT | [/histories/{id}/condition/{currentConditionId}](#puthistoriesidconditioncurrentconditionid) | Update a current condition in a clinical history |
 | POST | [/histories/{id}/image](#posthistoriesidimage) | Upload an image to a clinical history record |
 | DELETE | [/histories/{id}/image/{imageId}](#deletehistoriesidimageimageid) | Delete an image from a clinical history record |
+| GET | [/histories/{id}/report](#gethistoriesidreport) | Get a clinical history report by its ID |
 | POST | [/histories/{id}/treatment](#posthistoriesidtreatment) | Add a new treatment to a clinical history |
 | DELETE | [/histories/{id}/treatment/{treatmentId}](#deletehistoriesidtreatmenttreatmentid) | Delete a treatment from a clinical history |
 | PUT | [/histories/{id}/treatment/{treatmentId}](#puthistoriesidtreatmenttreatmentid) | Update a treatment in a clinical history |
@@ -36,6 +37,7 @@ API to manage patient clinical histories.
 | CurrentCondition | [#/components/schemas/CurrentCondition](#componentsschemascurrentcondition) |  |
 | File | [#/components/schemas/File](#componentsschemasfile) |  |
 | Treatment | [#/components/schemas/Treatment](#componentsschemastreatment) |  |
+| jwt | [#/components/securitySchemes/jwt](#componentssecurityschemesjwt) |  |
 
 ## Path Details
 
@@ -45,6 +47,9 @@ API to manage patient clinical histories.
 
 - Summary  
 Get all clinical histories
+
+- Security  
+jwt  
 
 #### Responses
 
@@ -73,6 +78,8 @@ Get all clinical histories
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -98,6 +105,9 @@ Get all clinical histories
 
 - Summary  
 Create a new clinical history
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -136,6 +146,8 @@ Create a new clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -164,6 +176,9 @@ Create a new clinical history
 - Summary  
 Delete a clinical history by patient ID
 
+- Security  
+jwt  
+
 #### Responses
 
 - 204 Clinical history for the patient deleted successfully
@@ -178,6 +193,9 @@ Delete a clinical history by patient ID
 
 - Summary  
 Get a clinical history by patient ID
+
+- Security  
+jwt  
 
 #### Responses
 
@@ -206,6 +224,8 @@ Get a clinical history by patient ID
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -223,6 +243,12 @@ Get a clinical history by patient ID
 }
 ```
 
+- 400 Patient ID is required
+
+- 403 Access denied
+
+- 404 Clinical history not found
+
 - 500 Error retrieving clinical history for patient
 
 ***
@@ -231,6 +257,9 @@ Get a clinical history by patient ID
 
 - Summary  
 Delete a clinical history by its ID
+
+- Security  
+jwt  
 
 #### Responses
 
@@ -246,6 +275,9 @@ Delete a clinical history by its ID
 
 - Summary  
 Get a clinical history by its ID
+
+- Security  
+jwt  
 
 #### Responses
 
@@ -274,6 +306,8 @@ Get a clinical history by its ID
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -291,6 +325,12 @@ Get a clinical history by its ID
 }
 ```
 
+- 400 Clinical history ID is required
+
+- 403 Access denied
+
+- 404 Clinical history not found
+
 - 500 Error retrieving clinical history
 
 ***
@@ -302,6 +342,9 @@ Add an allergy to a clinical history
 
 - Description  
 Adds an allergy to the allergies set in a specific clinical history.
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -367,6 +410,9 @@ Remove an allergy from a clinical history
 - Description  
 Removes an allergy from the allergies set in a specific clinical history.
 
+- Security  
+jwt  
+
 #### Responses
 
 - 200 Allergy successfully removed from the clinical history.
@@ -419,6 +465,9 @@ Upload an analytic to a clinical history record
 
 - Description  
 Allows uploading an analytic to an existing clinical history record.
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -485,6 +534,9 @@ Delete an analytic from a clinical history record
 - Description  
 Deletes a specific analytic associated with a clinical history record by its ID. Also removes the file from Azure Blob Storage.
 
+- Security  
+jwt  
+
 #### Responses
 
 - 200 Analytic deleted successfully
@@ -535,6 +587,9 @@ Deletes a specific analytic associated with a clinical history record by its ID.
 - Summary  
 Add a new current condition to a clinical history
 
+- Security  
+jwt  
+
 #### RequestBody
 
 - application/json
@@ -547,6 +602,8 @@ Add a new current condition to a clinical history
   details: string
   // When the condition started
   since?: string
+  // When the condition ended
+  until?: string
 }
 ```
 
@@ -577,6 +634,8 @@ Add a new current condition to a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -607,6 +666,9 @@ Add a new current condition to a clinical history
 - Summary  
 Delete a current condition from a clinical history
 
+- Security  
+jwt  
+
 #### Responses
 
 - 200 Current condition deleted successfully
@@ -634,6 +696,8 @@ Delete a current condition from a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -664,6 +728,9 @@ Delete a current condition from a clinical history
 - Summary  
 Update a current condition in a clinical history
 
+- Security  
+jwt  
+
 #### RequestBody
 
 - application/json
@@ -676,6 +743,8 @@ Update a current condition in a clinical history
   details: string
   // When the condition started
   since?: string
+  // When the condition ended
+  until?: string
 }
 ```
 
@@ -706,6 +775,8 @@ Update a current condition in a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -738,6 +809,9 @@ Upload an image to a clinical history record
 
 - Description  
 Allows uploading an image to an existing clinical history record.
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -804,6 +878,9 @@ Delete an image from a clinical history record
 - Description  
 Deletes a specific image associated with a clinical history record by its ID. Also removes the file from Azure Blob Storage.
 
+- Security  
+jwt  
+
 #### Responses
 
 - 200 Image deleted successfully
@@ -849,10 +926,44 @@ Deletes a specific image associated with a clinical history record by its ID. Al
 
 ***
 
+### [GET]/histories/{id}/report
+
+- Summary  
+Get a clinical history report by its ID
+
+- Security  
+jwt  
+
+#### Responses
+
+- 200 Returns the requested clinical history report
+
+`application/pdf`
+
+```ts
+{
+  "type": "string",
+  "format": "binary"
+}
+```
+
+- 400 Clinical history ID is required
+
+- 403 Access denied
+
+- 404 Clinical history not found
+
+- 500 Error generating clinical history report
+
+***
+
 ### [POST]/histories/{id}/treatment
 
 - Summary  
 Add a new treatment to a clinical history
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -898,6 +1009,8 @@ Add a new treatment to a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -928,6 +1041,9 @@ Add a new treatment to a clinical history
 - Summary  
 Delete a treatment from a clinical history
 
+- Security  
+jwt  
+
 #### Responses
 
 - 200 Treatment deleted successfully
@@ -955,6 +1071,8 @@ Delete a treatment from a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -984,6 +1102,9 @@ Delete a treatment from a clinical history
 
 - Summary  
 Update a treatment in a clinical history
+
+- Security  
+jwt  
 
 #### RequestBody
 
@@ -1029,6 +1150,8 @@ Update a treatment in a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -1077,6 +1200,8 @@ Update a treatment in a clinical history
     details: string
     // When the condition started
     since?: string
+    // When the condition ended
+    until?: string
   }[]
   images: {
     // Name of the file
@@ -1112,6 +1237,8 @@ Update a treatment in a clinical history
   details: string
   // When the condition started
   since?: string
+  // When the condition ended
+  until?: string
 }
 ```
 
@@ -1142,5 +1269,15 @@ Update a treatment in a clinical history
   endDate: string
   // Instructions for the treatment
   instructions: string
+}
+```
+
+### #/components/securitySchemes/jwt
+
+```ts
+{
+  "type": "http",
+  "scheme": "bearer",
+  "bearerFormat": "JWT"
 }
 ```
