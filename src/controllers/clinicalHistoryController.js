@@ -405,7 +405,8 @@ async function getAppointments(patientId, token) {
 const circuitBreakerOptions = {
   timeout: 5000,
   errorThresholdPercentage: 50,
-  resetTimeout: 30000
+  resetTimeout: 30000,
+  errorFilter: (err) => err.response && err.response.status >= 400 && err.response.status < 500
 };
 
 // Circuito para getPatient
